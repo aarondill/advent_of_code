@@ -1,3 +1,6 @@
 node_modules
 *.class
 pnpm-lock.yaml
+# input files
+*.dat
+*.in

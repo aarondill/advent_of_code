@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "lib": ["esnext"],
+    "target": "ESNext",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "noUncheckedIndexedAccess": true,
+    "module": "NodeNext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "incremental": true
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
+}

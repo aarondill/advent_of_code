@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import static java.util.function.Predicate.not;
 
 public class Part2 {
@@ -43,11 +44,9 @@ public class Part2 {
       }
 
       // Find first free space >= this one *before* this one
-      int freeIndex = 0;
-      while (freeIndex < files.size() && freeIndex < i
-          && (!files.get(freeIndex).isFree() || files.get(freeIndex).size() < file.size()))
-        freeIndex++;
-      if (freeIndex >= i || !files.get(freeIndex).isFree()) continue; // no free space found
+      int freeIndex = IntStream.range(0, i).filter(j -> files.get(j).isFree())
+          .filter(j -> files.get(j).size() >= file.size()).findFirst().orElse(-1);
+      if (freeIndex == -1) continue; // no free space found
       if (files.get(freeIndex).size() == file.size()) {
         Collections.swap(files, i, freeIndex);
       } else {

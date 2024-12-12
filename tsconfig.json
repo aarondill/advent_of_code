@@ -7,7 +7,6 @@
     "strict": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "noUncheckedIndexedAccess": true,
     "module": "NodeNext",
     "moduleResolution": "bundler",
     "isolatedModules": true,

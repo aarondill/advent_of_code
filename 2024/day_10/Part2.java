@@ -16,13 +16,11 @@ public class Part2 {
   }
 
   // Count the number of paths from the start to each end (summed).
-  private static long numberOfPaths(Node start, List<Node> ends) {
-    if (ends.contains(start)) return 1;
-    long sum = 0;
-    for (Node n : start.connections()) {
-      sum += numberOfPaths(n, ends);
-    }
-    return sum;
+  private static int numberOfPaths(Node start, List<Node> ends) {
+    return start.connections().stream().mapToInt(n -> {
+      if (ends.contains(n)) return 1;
+      return numberOfPaths(n, ends);
+    }).sum();
   }
 
   public static void main(String[] args) throws FileNotFoundException {
@@ -34,10 +32,9 @@ public class Part2 {
         String line = scan.nextLine();
         if (line.isEmpty()) continue;
         for (int x = 0; x < line.length(); x++) {
-          char c = line.charAt(x);
-          Node node = new Node(c - '0', x, y);
           if (graph.size() <= y) graph.add(new ArrayList<>());
-          graph.get(y).add(node);
+          int v = line.charAt(x) - '0';
+          graph.get(y).add(new Node(v));
         }
         y++;
       }
@@ -67,13 +64,17 @@ public class Part2 {
   }
 }
 
-record Node(int value, List<Node> connections, int x, int y) {
-  public Node(int value, int x, int y) {
-    this(value, new ArrayList<>(), x, y);
+record Node(int value, List<Node> connections) {
+  public Node(int value) {
+    this(value, new ArrayList<>());
+  }
+
+  public boolean equals(Object o) {
+    return this == o;
   }
 
   public String toString() {
-    String ret = String.format("%s[%d, %d]", value, x, y);
+    String ret = "" + value;
     if (connections.isEmpty()) return ret;
     return String.format("%s(%s)", ret, connections.stream().map(Node::toString).collect(Collectors.joining(", ")));
   }

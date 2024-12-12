@@ -1,11 +1,9 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
@@ -15,24 +13,19 @@ public class Part1 {
     return new Scanner(new File(args[0]));
   }
 
-  private static Map<Node, Node> dijkstra(Node start) {
-    Map<Node, Node> prev = new HashMap<>();
-    Map<Node, Integer> dist = new HashMap<>();
-    PriorityQueue<Node> queue = new PriorityQueue<>(Comparator.comparingInt(dist::get));
-    dist.put(start, 0);
-    queue.add(start);
-    while (!queue.isEmpty()) {
-      Node node = queue.poll();
-      for (Node n : node.connections()) {
-        int newDist = dist.get(node) + 1;
-        if (newDist < dist.getOrDefault(n, Integer.MAX_VALUE)) {
-          dist.put(n, newDist);
-          prev.put(n, node);
-          queue.add(n);
-        }
+  private static int countReachable(Node start, Collection<Node> ends) {
+    return countReachable(start, new HashSet<>(ends));
+  }
+
+  // NOTE: modifies ends!
+  private static int countReachable(Node start, HashSet<Node> ends) {
+    return start.connections().stream().mapToInt(n -> {
+      if (ends.contains(n)) {
+        ends.remove(n);
+        return 1;
       }
-    }
-    return prev;
+      return countReachable(n, ends);
+    }).sum();
   }
 
   public static void main(String[] args) throws FileNotFoundException {
@@ -44,10 +37,9 @@ public class Part1 {
         String line = scan.nextLine();
         if (line.isEmpty()) continue;
         for (int x = 0; x < line.length(); x++) {
-          char c = line.charAt(x);
-          Node node = new Node(c - '0', x, y);
+          int v = line.charAt(x) - '0';
           if (graph.size() <= y) graph.add(new ArrayList<>());
-          graph.get(y).add(node);
+          graph.get(y).add(new Node(v));
         }
         y++;
       }
@@ -71,20 +63,24 @@ public class Part1 {
     }
     List<Node> starts = graph.stream().flatMap(List::stream).filter(n -> n.value() == 0).toList();
     List<Node> ends = graph.stream().flatMap(List::stream).filter(n -> n.value() == 9).toList();
-    long result =
-        starts.stream().map(Part1::dijkstra).mapToLong(res -> ends.stream().filter(res::containsKey).count()).sum();
+    long result = starts.stream().mapToInt(start -> countReachable(start, ends)).sum();
     System.out.println(result);
 
   }
 }
 
-record Node(int value, List<Node> connections, int x, int y) {
-  public Node(int value, int x, int y) {
-    this(value, new ArrayList<>(), x, y);
+record Node(int value, List<Node> connections) {
+  public Node(int value) {
+    this(value, new ArrayList<>());
+  }
+
+  // Needed so List.contains() works. Each node is unique, not only by value, but by it's position (reference) in the graph.
+  public boolean equals(Object o) {
+    return this == o;
   }
 
   public String toString() {
-    String ret = String.format("%s[%d, %d]", value, x, y);
+    String ret = value + "";
     if (connections.isEmpty()) return ret;
     return String.format("%s(%s)", ret, connections.stream().map(Node::toString).collect(Collectors.joining(", ")));
   }

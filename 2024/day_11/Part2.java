@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -25,19 +26,15 @@ public class Part2 {
     } else return Stream.of(stone * 2024);
   }
 
-  // map of [stone, blink times] -> number of blinks
-  public static Map<CacheKey, Long> cache = new HashMap<>();
+  // This need to be a ConcurrentSkipListMap so recursive updates (computeIfAbsent) work
+  public static Map<CacheKey, Long> cache = new ConcurrentSkipListMap<>();
 
   public static long getStonesCount(Stream<Long> stones, int blinkTimes) {
     if (blinkTimes == 0) return stones.count();
-    return stones.mapToLong(stone -> {
-      CacheKey key = new CacheKey(stone, blinkTimes);
-      if (cache.containsKey(key)) return cache.get(key);
+    return stones.mapToLong(stone -> cache.computeIfAbsent(new CacheKey(stone, blinkTimes), k -> {
       Stream<Long> next = transform(stone);
-      long result = getStonesCount(next, blinkTimes - 1);
-      cache.put(key, result);
-      return result;
-    }).sum();
+      return getStonesCount(next, blinkTimes - 1);
+    })).sum();
   }
 
   public static void main(String[] args) throws FileNotFoundException {
@@ -55,4 +52,10 @@ public class Part2 {
   }
 }
 
-record CacheKey(long stone, int blinkTimes) {}
+record CacheKey(long stone, int blinkTimes) implements Comparable<CacheKey> {
+  // This needs to be compareable so that the ConcurrentSkipListMap works
+  public int compareTo(CacheKey o) {
+    if (this.stone != o.stone) return Long.compare(this.stone, o.stone);
+    return Integer.compare(this.blinkTimes, o.blinkTimes);
+  }
+}
